@@ -26,7 +26,7 @@ onMounted(() => {
   <div class="min-h-screen bg-gray-100 p-6">
     <div class="max-w-7xl mx-auto flex flex-col gap-6">
 
-      <div>
+      <div class="bg-white rounded-xl border border-gray-300 shadow-sm p-4">
         <h1 class="text-xl font-bold text-gray-800 mb-4">AARDVARK FRONTEND TASK BY NOJUS BUTRIMAVIČIUS</h1>
         <Input v-model="baseUrl" label="API base URL" placeholder="Enter Base API URL..." />
       </div>
@@ -36,15 +36,17 @@ onMounted(() => {
         <Statistics :stats="stats" :config="config" />
       </div>
 
-      <div v-if="config" class="bg-white rounded-xl border border-gray-300 shadow-sm p-4">
-        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Game Board</h2>
-        <Gameboard :config="config" :current-result="currentResult" :is-spinning="isSpinning" />
-      </div>
-
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-gray-300 shadow-sm p-4">
-          <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Spin History</h2>
-          <SpinHistory :events="events" :countdown="countdown" :is-spinning="isSpinning" :next-game-id="nextGameId" />
+        <div class="flex flex-col gap-6">
+          <div v-if="config" class="bg-white rounded-xl border border-gray-300 shadow-sm p-4">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Game Board</h2>
+            <Gameboard :config="config" :current-result="currentResult" :is-spinning="isSpinning" />
+          </div>
+
+          <div class="bg-white rounded-xl border border-gray-300 shadow-sm p-4">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Spin History</h2>
+            <SpinHistory :events="events" :countdown="countdown" :is-spinning="isSpinning" :next-game-id="nextGameId" />
+          </div>
         </div>
 
         <div class="bg-white rounded-xl border border-gray-300 shadow-sm p-4">

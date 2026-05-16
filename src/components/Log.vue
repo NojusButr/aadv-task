@@ -5,7 +5,7 @@ const { logs } = useLog()
 </script>
 
 <template>
-  <div class="w-full font-mono text-xs border overflow-y-auto max-h-64">
+  <div class="w-full font-mono text-xs border overflow-y-auto h-[500px]">
     <div
       v-for="(entry, index) in logs"
       :key="index"
