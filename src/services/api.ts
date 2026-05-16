@@ -14,7 +14,6 @@ api.interceptors.request.use((config) => {
 
 export const fetchData = async <T>(endpoint: string) => {
   try {
-    console.log(endpoint)
     const response = await api.get<T>(endpoint)
     return response.data
   } catch (error) {
