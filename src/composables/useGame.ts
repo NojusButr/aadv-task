@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import api from '@/services/api'
 import type { Game } from '@/schemas/game'
 import { useLog } from '@/composables/useLog'
+import { useStats } from '@/composables/useStats'
 
 const countdown = ref(0)
 const isSpinning = ref(false)
@@ -10,9 +11,11 @@ const currentResult = ref<number | null>(null)
 const nextGameId = ref<number | null>(null)
 
 let countdownTimer: ReturnType<typeof setInterval> | null = null
+let polling = false
 
 export function useGames() {
   const { log } = useLog()
+  const { fetchStats } = useStats()
 
   async function fetchNextGame() {
     try {
@@ -22,7 +25,7 @@ export function useGames() {
 
       nextGameId.value = nextGame.id
       log(`sleeping for fakeStartDelta ${nextGame.fakeStartDelta} sec`)
-      startCountdown(nextGame.fakeStartDelta, nextGame.uuid, nextGame.id)
+      startCountdown(nextGame.fakeStartDelta, nextGame.id)
     } catch (e) {
       log('Failed to fetch next game, retrying in 5s...')
       await new Promise(resolve => setTimeout(resolve, 5000))
@@ -30,54 +33,58 @@ export function useGames() {
     }
   }
 
-  function startCountdown(seconds: number, uuid: string, id: number) {
+  function startCountdown(seconds: number, id: number) {
+    if (countdownTimer) {
+      clearInterval(countdownTimer)
+      countdownTimer = null
+    }
+
     countdown.value = seconds
     isSpinning.value = false
     currentResult.value = null
+    polling = false
 
     countdownTimer = setInterval(() => {
       countdown.value--
       if (countdown.value <= 0) {
         clearInterval(countdownTimer!)
-        startSpinning(uuid, id)
+        countdownTimer = null
+        startSpinning(id)
       }
     }, 1000)
   }
 
-  async function startSpinning(uuid: string, id: number) {
+  async function startSpinning(id: number) {
+    if (polling) return
+    polling = true
     log('Spinning the wheel')
     isSpinning.value = true
     await pollForResult(id)
   }
 
   async function pollForResult(id: number) {
-    const MAX_RETRIES = 10
-    let attempts = 0
-
-    while (attempts < MAX_RETRIES) {
+    while (polling) {
       try {
         log(`GET .../game/${id}`)
         const res = await api.get(`/game/${id}`)
         const game: Game = res.data
 
         if (game.result !== null) {
+          polling = false
           log(`result is ${game.result}`)
           isSpinning.value = false
           currentResult.value = game.result
           events.value.unshift(`Game ${id} ended, result is ${game.result}`)
+          await fetchStats()
           await fetchNextGame()
           return
         }
       } catch (e) {
         log(`Failed to fetch game ${id}, retrying...`)
       }
-      attempts++
+
       await new Promise(resolve => setTimeout(resolve, 1000))
     }
-
-    events.value.unshift(`Game ${id} failed to get result after ${MAX_RETRIES} attempts`)
-    isSpinning.value = false
-    await fetchNextGame()
   }
 
   return {

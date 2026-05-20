@@ -2,18 +2,32 @@
 import Input from './components/Input.vue'
 import { useApiUrl } from '@/composables/useApiUrl'
 import { useRouletteConfig } from '@/composables/useConfig'
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import { useStats } from '@/composables/useStats'
 import Statistics from '@/components/Statistics.vue'
 import Gameboard from '@/components/Gameboard.vue'
 import SpinHistory from '@/components/SpinHistory.vue'
 import { useGames } from '@/composables/useGame'
 import Log from '@/components/Log.vue'
+import { useLog } from '@/composables/useLog'
 
 const { baseUrl } = useApiUrl()
 const { fetchConfig, config } = useRouletteConfig()
 const { fetchStats, stats } = useStats()
 const { countdown, isSpinning, events, currentResult, fetchNextGame, nextGameId } = useGames()
+const { log } = useLog()
+
+let restartTimer: ReturnType<typeof setTimeout> | null = null
+
+watch(baseUrl, () => {
+  if (restartTimer) clearTimeout(restartTimer)
+  restartTimer = setTimeout(async () => {
+    log(`API URL changed to ${baseUrl.value}`)
+    await fetchConfig()
+    await fetchStats()
+    await fetchNextGame()
+  }, 1000)
+})
 
 onMounted(() => {
   fetchConfig()

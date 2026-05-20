@@ -14,7 +14,9 @@ export function useStats() {
       const res = await api.get(`/stats?limit=200`)
       stats.value = res.data
     } catch (e) {
-      log('Failed to fetch stats')
+      log('Failed to fetch stats, retrying in 1s...')
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      await fetchStats()
     }
   }
 
